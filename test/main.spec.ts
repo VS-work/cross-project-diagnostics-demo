@@ -14,9 +14,9 @@ describe('logging', () => {
   });
 
   xit('with 3 diagnistics manager', () => {
-    const ws = new DiagnosticManager('ws', '1.0.0');
-    const wsreader = new DiagnosticManager('wsreader', '2.0.0');
-    const vizabi = new DiagnosticAggregator('vizabi', '3.0.0');
+    const ws = new DiagnosticManager('ws', '#Q001', '1.0.0');
+    const wsreader = new DiagnosticManager('wsreader', '#Q001', '2.0.0');
+    const vizabi = new DiagnosticAggregator('vizabi', '#Q001', '3.0.0');
 
     wsreader.addOutputTo(vizabi);
     ws.addOutputTo(wsreader);
@@ -34,7 +34,7 @@ describe('logging', () => {
       private diag: DiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new DiagnosticManager('ws', '1.0.0');
+        this.diag = new DiagnosticManager('ws', '#Q001', '1.0.0');
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -49,7 +49,7 @@ describe('logging', () => {
       private diag: DiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new DiagnosticManager('wsreader', '2.0.0');
+        this.diag = new DiagnosticManager('wsreader', '#Q001', '2.0.0');
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -66,7 +66,7 @@ describe('logging', () => {
       private diag: DiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new DiagnosticManager('vizabi', '3.0.0');
+        this.diag = new DiagnosticManager('vizabi', '#Q001', '3.0.0');
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -80,7 +80,7 @@ describe('logging', () => {
     }
 
 
-    const main = new DiagnosticAggregator('tools-page', '0.1.0');
+    const main = new DiagnosticAggregator('tools-page', '#Q001', '0.1.0');
 
     const vizabi = new Vizabi(main);
 

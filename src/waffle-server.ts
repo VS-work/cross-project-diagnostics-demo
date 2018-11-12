@@ -1,36 +1,70 @@
 import * as express from 'express';
 import { DdfCsvReader } from './ddfcsv-reader';
+import { DiagnosticManager, DiagnosticAggregator } from './diagnostics/diagnostic-manager';
 
 class WaffleServer {
-  private logger;
+  private diag: DiagnosticManager;
 
-  constructor() {
-    // this.logger = createLogger('waffleserver:log', loggerObject);
+  constructor(parentDiagnostic: DiagnosticManager) {
+    this.diag = new DiagnosticManager('waffleserver', parentDiagnostic.instance, '1.0.0');
+    this.diag.addOutputTo(parentDiagnostic);
   }
 
-  processQuery(query) {
-    const ddfCsvReader = new DdfCsvReader();
-    const data = ddfCsvReader.read(query);
+  async processQuery(query) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        this.diag.info('processQuery', 'start query processing');
 
-    // this.logger('got data ', data, ' in accordance with ', query);
+        try {
+          const ddfCsvReader = new DdfCsvReader(this.diag);
+          const data = ddfCsvReader.read(query);
 
-    return data;
+          this.diag.info('processQuery', 'got result');
+
+          resolve(data);
+        } catch (e) {
+          this.diag.error('processQuery', e.message);
+
+          reject({ error: e.message });
+        }
+      }, query.timeout || 0);
+    });
   }
 }
 
 const app = express();
 const port = 3000;
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  const diag: DiagnosticAggregator = new DiagnosticAggregator('waffle server', '#Q001', '3.0.0');
+
   res.setHeader('Content-Type', 'text/plain');
 
-  const waffleServer = new WaffleServer();
+  diag.info('get /', 'start');
+
+  const waffleServer = new WaffleServer(diag);
+
+  diag.info('get /', 'ws instance created');
+
   const query = { select: { all: true } };
 
-  const result = JSON.stringify(waffleServer.processQuery(query), null, 2);
+  try {
+    const result: any = await waffleServer.processQuery(query);
 
-  res.write(`----------------------\nresult is ${result}`);
-  res.end();
+    // if (req.diag) {
+    result._diagnostic = diag.content;
+    // }
+
+    const jsonResult = JSON.stringify(result, null, 2);
+
+    diag.info('get /', 'got result');
+
+    res.write(jsonResult);
+  } catch (e) {
+    res.write(e);
+  } finally {
+    res.end();
+  }
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));

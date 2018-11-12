@@ -26,6 +26,7 @@ export const getLevelByCode = (levelCode: number): Level => {
 
 export type DiagnosticRecord = {
   module: string;
+  instance: string;
   version: string;
   function: string;
   message: string;

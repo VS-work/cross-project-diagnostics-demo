@@ -4,6 +4,7 @@ export class DiagnosticManager {
   private children: DiagnosticManager[] = [];
 
   constructor(public readonly module: string,
+    public readonly instance: string,
     public readonly version: string) {
   }
 
@@ -33,6 +34,7 @@ export class DiagnosticManager {
     return {
       module: this.module,
       version: this.version,
+      instance: this.instance,
       function: data.funName,
       message: data.message,
       levelCode: level | (data.attachment ? detailsLevel : 0),
