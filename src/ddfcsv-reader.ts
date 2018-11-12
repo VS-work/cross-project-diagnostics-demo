@@ -14,7 +14,7 @@ export class DdfCsvReader {
 
     const validator = new DdfQueryValidator(this.diag);
 
-    if (query.soBig) {
+    if (query.hasWarning) {
       this.diag.warning('read', 'query is so big');
     }
 

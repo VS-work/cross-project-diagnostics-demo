@@ -11,7 +11,7 @@ export class DdfQueryValidator {
   validate(query) {
     this.diag.info('validate', 'starting validation');
 
-    if (query.isWeird) {
+    if (query.hasWarning) {
       this.diag.warning('validate', 'weird query', query);
     }
 

@@ -27,7 +27,7 @@ class WaffleServer {
 
           reject({ error: e.message });
         }
-      }, query.timeout || 0);
+      }, query.delay || 0);
     });
   }
 }
@@ -36,8 +36,10 @@ const app = express();
 const port = 3000;
 
 app.get('/', async (req, res) => {
-  const diag: DiagnosticAggregator = new DiagnosticAggregator('waffle server', '#Q001', '3.0.0');
+  // console.log(req.query.isDiagnostics);
+  const diag: DiagnosticAggregator = new DiagnosticAggregator('waffle server', req.query.queryId, '3.0.0');
 
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader('Content-Type', 'text/plain');
 
   diag.info('get /', 'start');
@@ -46,7 +48,11 @@ app.get('/', async (req, res) => {
 
   diag.info('get /', 'ws instance created');
 
-  const query = { select: { all: true } };
+  const query: any = { select: { all: true } };
+
+  query.delay = Number(req.query.delay);
+  query.hasError = req.query.hasError;
+  query.hasWarning = req.query.hasWarning;
 
   try {
     const result: any = await waffleServer.processQuery(query);
