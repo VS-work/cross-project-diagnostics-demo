@@ -1,10 +1,20 @@
 import { DiagnosticRecord, Level } from './definitions';
 
-export class DiagnosticManager {
+export interface DiagnosticManager {
+  readonly requestId: string,
+  readonly version: string;
+  fatal(funName: string, message: string, attachment?);
+  error(funName: string, message: string, attachment?);
+  warning(funName: string, message: string, attachment?);
+  debug(funName: string, message: string, attachment?);
+  addRecord(record: DiagnosticRecord);
+}
+
+export class LiftingDiagnosticManager implements DiagnosticManager {
   private children: DiagnosticManager[] = [];
 
   constructor(public readonly module: string,
-    public readonly instance: string,
+    public readonly requestId: string,
     public readonly version: string) {
   }
 
@@ -12,16 +22,20 @@ export class DiagnosticManager {
     this.children.push(child);
   }
 
+  fatal(funName: string, message: string, attachment?) {
+    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.FATAL));
+  }
+
   error(funName: string, message: string, attachment?) {
-    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.Error, Level.ErrorInDetails));
+    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.ERROR));
   }
 
   warning(funName: string, message: string, attachment?) {
-    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.Warning, Level.WarningInDetails));
+    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.WARNING));
   }
 
-  info(funName: string, message: string, attachment?) {
-    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.Info, Level.InfoInDetails));
+  debug(funName: string, message: string, attachment?) {
+    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.DEBUG));
   }
 
   addRecord(record: DiagnosticRecord) {
@@ -30,20 +44,17 @@ export class DiagnosticManager {
     }
   }
 
-  private prepareRecord(data, level: Level, detailsLevel: Level) {
+  private prepareRecord(data, level: Level): DiagnosticRecord {
+    const {funName, message, attachment} = data;
+
     return {
-      module: this.module,
-      version: this.version,
-      instance: this.instance,
-      function: data.funName,
-      message: data.message,
-      levelCode: level | (data.attachment ? detailsLevel : 0),
-      attachment: data.attachment
-    }
+      module: this.module, version: this.version, requestId: this.requestId,
+      funName, message, level, attachment
+    };
   }
 }
 
-export class DiagnosticAggregator extends DiagnosticManager {
+export class EndpointDiagnosticManager extends LiftingDiagnosticManager {
   content: DiagnosticRecord[] = [];
 
   addRecord(record: DiagnosticRecord) {

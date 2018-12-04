@@ -16,11 +16,11 @@
     }
 
     function getDiagTable(diagContent) {
-      let result = `<table border="1"><tr><td>Module</td><td>Query</td><td>Message</td><td>Version</td><td>Severity</td><td>Function</td><td>Attachment</td></tr>`;
+      let result = `<table border="1"><tr><td>Module</td><td>Request ID</td><td>Message</td><td>Version</td><td>Severity Level</td><td>Function</td><td>Attachment</td></tr>`;
       let i = 0;
 
       for (const r of diagContent) {
-        result += `<tr><td>${r.module}</td><td>${r.instance}</td><td>${r.message}</td><td>${r.version}</td><td>?</td><td>${r.function}</td>`;
+        result += `<tr><td>${r.module}</td><td>${r.requestId}</td><td>${r.message}</td><td>${r.version}</td><td>${r.level}</td><td>${r.funName}</td>`;
 
         if (r.attachment) {
           result += `<td><a id="aa${i}" href="#" onclick="showHide(${i})">show</a><span id="a${i}" style="display: none;">${JSON.stringify(r.attachment, null, 2)}</span></td></tr>`;
@@ -37,32 +37,52 @@
     }
 
     function newChart() {
-      const isDiagnostics = document.getElementById('chkDiag').checked;
-      const hasError = document.getElementById('chkError').checked;
-      const hasWarning = document.getElementById('chkWarning').checked;
+      const emulateFatal = document.getElementById('chkFatal').checked;
+      const emulateError = document.getElementById('chkError').checked;
+      const emulateWarning = document.getElementById('chkWarning').checked;
       const delay = Number(document.getElementById('delay').value || 0) * 1000;
+      const level = document.getElementById('level').value;
       const elProgress = document.getElementById('progress');
       const elResult = document.getElementById('result');
 
-      elProgress.innerHTML = 'in progress...';
-      vizabi.chart(isDiagnostics, hasError, hasWarning, delay, (diagContent) => {
-        elProgress.innerHTML = '';
+      const requestId = vizabi.chart(delay, level, emulateFatal, emulateError, emulateWarning, (diagContent) => {
+        elProgress.innerHTML += `${requestId} is done...<br>`;
         // elResult.innerHTML = JSON.stringify(diagContent, null, 2);
         elResult.innerHTML = getDiagTable(diagContent);
       });
+      elProgress.innerHTML += `${requestId} in progress...<br>`;
     }
   </script>
 
   <div>
     Delay, sec <input type="text" id="delay" value="5" size="4" maxlength="4">&nbsp;
-    <input type="checkbox" id="chkError" /><label for="chkError">Error</label>&nbsp;
-    <input type="checkbox" id="chkWarning" /><label for="chkWarning">Warning</label>&nbsp;
+    <select id="level">
+      <option value="OFF">OFF</option>
+      <option value="FATAL">FATAL</option>
+      <option value="ERROR">ERROR</option>
+      <option value="WARNING">WARNING</option>
+      <option value="DEBUG">DEBUG</option>
+      <option value="ALL" selected>ALL</option>
+    </select>
+    <input type="checkbox" id="chkFatal" /><label for="chkFatal">Emulate FATAL</label>&nbsp;
+    <input type="checkbox" id="chkError" /><label for="chkError">Emulate ERROR</label>&nbsp;
+    <input type="checkbox" id="chkWarning" /><label for="chkWarning">Emulate WARNING</label>&nbsp;
     <input type="button" value="new chart" onclick="newChart()" />
-    <input type="checkbox" id="chkDiag" checked /><label for="chkDiag">Diagnostics</label>&nbsp;
-    <span id="progress" style="color: red;"></span>
   </div>
 
-  <div id="result"></div>
+  <hr>
+
+  <table>
+    <tr>
+      <td valign="top">
+          <div id="progress"></div>
+      </td>
+      <td valign="top">
+          <div id="result"></div>
+      </td>
+    </tr>
+  </table>
+
 </body>
 
 </html>

@@ -1,20 +1,20 @@
 import { DdfQueryValidator } from './ddf-query-validator';
-import { DiagnosticManager } from './diagnostics/diagnostic-manager';
+import { LiftingDiagnosticManager } from './diagnostics/diagnostic-manager';
 
 export class DdfCsvReader {
-  private diag: DiagnosticManager;
+  private diag: LiftingDiagnosticManager;
 
-  constructor(parentDiagnostic: DiagnosticManager) {
-    this.diag = new DiagnosticManager('ddfcsvreader', parentDiagnostic.instance, '1.0.0');
+  constructor(parentDiagnostic: LiftingDiagnosticManager) {
+    this.diag = new LiftingDiagnosticManager('ddfcsvreader', parentDiagnostic.requestId, '1.0.0');
     this.diag.addOutputTo(parentDiagnostic);
   }
 
   read(query) {
-    this.diag.info('read', 'reading ', query);
+    this.diag.debug('read', 'reading ', query);
 
     const validator = new DdfQueryValidator(this.diag);
 
-    if (query.hasWarning) {
+    if (query.emulateWarning) {
       this.diag.warning('read', 'query is so big');
     }
 
@@ -24,7 +24,7 @@ export class DdfCsvReader {
       throw Error('query is NOT valid!');
     }
 
-    this.diag.info('read', 'got result');
+    this.diag.debug('read', 'got result');
 
     return { columns: ['geo', 'year', 'pop'], data: [['ua', '2017', 4000000]] };
   }

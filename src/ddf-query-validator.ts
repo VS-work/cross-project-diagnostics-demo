@@ -1,25 +1,25 @@
-import { DiagnosticManager } from './diagnostics/diagnostic-manager';
+import { LiftingDiagnosticManager } from './diagnostics/diagnostic-manager';
 
 export class DdfQueryValidator {
-  private diag: DiagnosticManager;
+  private diag: LiftingDiagnosticManager;
 
-  constructor(parentDiagnostic: DiagnosticManager) {
-    this.diag = new DiagnosticManager('ddfcsvreader', parentDiagnostic.instance, '1.0.0');
+  constructor(parentDiagnostic: LiftingDiagnosticManager) {
+    this.diag = new LiftingDiagnosticManager('ddfcsvreader', parentDiagnostic.requestId, '1.0.0');
     this.diag.addOutputTo(parentDiagnostic);
   }
 
   validate(query) {
-    this.diag.info('validate', 'starting validation');
+    this.diag.debug('validate', 'starting validation');
 
-    if (query.hasWarning) {
+    if (query.emulateWarning) {
       this.diag.warning('validate', 'weird query', query);
     }
 
-    if (query.hasError) {
+    if (query.emulateError) {
       this.diag.error('validate', 'invalid query', { query, error: new Error('wrong query') });
     }
 
-    this.diag.info('validate', 'validation passed ok');
+    this.diag.debug('validate', 'validation passed ok');
 
     return true;
   }
