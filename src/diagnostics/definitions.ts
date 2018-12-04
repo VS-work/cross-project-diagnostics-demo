@@ -7,17 +7,29 @@ export enum Level {
   ALL = FATAL | ERROR | WARNING | DEBUG
 }
 
-export const getLevelByCode = (levelCode: number): Level => {
-  switch (levelCode) {
-    case 0: return Level.OFF;
-    case 1: return Level.FATAL;
-    case 2: return Level.ERROR;
-    case 3: return Level.WARNING;
-    case 4: return Level.DEBUG;
-    case 5: return Level.ALL;
+export const getLevelByLabel = (levelStr: string): Level => {
+  switch (levelStr) {
+    case 'off': return Level.OFF;
+    case 'fatal': return Level.FATAL;
+    case 'error': return Level.ERROR;
+    case 'warning': return Level.WARNING;
+    case 'debug': return Level.DEBUG;
+    case 'all': return Level.ALL;
     default: return Level.OFF;
   }
 };
+
+export const getLabelByLevel = (level: Level): string => {
+  switch (level) {
+    case Level.OFF: return 'off';
+    case Level.FATAL: return 'fatal';
+    case Level.ERROR: return 'error';
+    case Level.WARNING: return 'warning';
+    case Level.DEBUG: return 'debug';
+    case Level.ALL: return 'all';
+    default: 'off';
+  }
+}
 
 export type DiagnosticRecord = {
   module: string;

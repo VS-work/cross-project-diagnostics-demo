@@ -15,25 +15,41 @@
       elLink.innerText = elLink.innerText === 'show' ? 'hide' : 'show';
     }
 
-    function getDiagTable(diagContent) {
-      let result = `<table border="1"><tr><td>Module</td><td>Request ID</td><td>Message</td><td>Version</td><td>Severity Level</td><td>Function</td><td>Attachment</td></tr>`;
+    function setDiagTable(diagContent) {
+      const resultTable = document.getElementById('result');
+
       let i = 0;
 
       for (const r of diagContent) {
-        result += `<tr><td>${r.module}</td><td>${r.requestId}</td><td>${r.message}</td><td>${r.version}</td><td>${r.level}</td><td>${r.funName}</td>`;
+        const row = resultTable.insertRow();
+
+        let cell = row.insertCell();
+        cell.innerHTML = r.module;
+
+        cell = row.insertCell();
+        cell.innerHTML = r.requestId;
+
+        cell = row.insertCell();
+        cell.innerHTML = r.message;
+
+        cell = row.insertCell();
+        cell.innerHTML = r.version;
+
+        cell = row.insertCell();
+        cell.innerHTML = frontend.getLabelByLevel(r.level);
+
+        cell = row.insertCell();
+        cell.innerHTML = r.funName;
+
+        cell = row.insertCell();
 
         if (r.attachment) {
-          result += `<td><a id="aa${i}" href="#" onclick="showHide(${i})">show</a><span id="a${i}" style="display: none;">${JSON.stringify(r.attachment, null, 2)}</span></td></tr>`;
+          cell.innerHTML = `<a id="aa${i}" href="#" onclick="showHide(${i})">show</a><span id="a${i}" style="display: none;">${JSON.stringify(r.attachment, null, 2)}</span>`;
         } else {
-          result += `<td>&nbsp;</td></tr>`;
+          cell.innerHTML = '&nbsp;';
         }
-
-        ++i;
+        i++;
       }
-
-      result += '</table>';
-
-      return result;
     }
 
     function newChart() {
@@ -47,8 +63,7 @@
 
       const requestId = vizabi.chart(delay, level, emulateFatal, emulateError, emulateWarning, (diagContent) => {
         elProgress.innerHTML += `${requestId} is done...<br>`;
-        // elResult.innerHTML = JSON.stringify(diagContent, null, 2);
-        elResult.innerHTML = getDiagTable(diagContent);
+        setDiagTable(diagContent);
       });
       elProgress.innerHTML += `${requestId} in progress...<br>`;
     }
@@ -75,10 +90,20 @@
   <table>
     <tr>
       <td valign="top">
-          <div id="progress"></div>
+        <div id="progress"></div>
       </td>
       <td valign="top">
-          <div id="result"></div>
+        <table border="1" id="result">
+          <thead>
+            <th>Module</th>
+            <th>Request ID</th>
+            <th>Message</th>
+            <th>Version</th>
+            <th>Severity Level</th>
+            <th>Function</th>
+            <th>Attachment</th>
+          </thead>
+        </table>
       </td>
     </tr>
   </table>
