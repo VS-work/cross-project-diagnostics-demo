@@ -14,9 +14,9 @@ describe('logging', () => {
   });
 
   xit('with 3 diagnistics manager', () => {
-    const ws = new LiftingDiagnosticManager('ws', '#Q001', '1.0.0');
-    const wsreader = new LiftingDiagnosticManager('wsreader', '#Q001', '2.0.0');
-    const vizabi = new EndpointDiagnosticManager('vizabi', '#Q001', '3.0.0');
+    const ws = new LiftingDiagnosticManager({ module: 'ws', version: '1.0.0', requestId: '#Q001' });
+    const wsreader = new LiftingDiagnosticManager({ module: 'wsreader', version: '2.0.0', requestId: '#Q001' });
+    const vizabi = new EndpointDiagnosticManager({ module: 'vizabi', version: '3.0.0', requestId: '#Q001' });
 
     wsreader.addOutputTo(vizabi);
     ws.addOutputTo(wsreader);
@@ -34,7 +34,7 @@ describe('logging', () => {
       private diag: LiftingDiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new LiftingDiagnosticManager('ws', '#Q001', '1.0.0');
+        this.diag = new LiftingDiagnosticManager({ module: 'ws', version: '1.0.0', requestId: '#Q001' });
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -49,7 +49,7 @@ describe('logging', () => {
       private diag: LiftingDiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new LiftingDiagnosticManager('wsreader', '#Q001', '2.0.0');
+        this.diag = new LiftingDiagnosticManager({ module: 'wsreader', version: '2.0.0', requestId: '#Q001' });
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -66,7 +66,7 @@ describe('logging', () => {
       private diag: LiftingDiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new LiftingDiagnosticManager('vizabi', '#Q001', '3.0.0');
+        this.diag = new LiftingDiagnosticManager({ module: 'vizabi', version: '3.0.0', requestId: '#Q001' });
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -80,7 +80,7 @@ describe('logging', () => {
     }
 
 
-    const main = new EndpointDiagnosticManager('tools-page', '#Q001', '0.1.0');
+    const main = new EndpointDiagnosticManager({ module: 'tools-page', version: '0.1.0', requestId: '#Q001' });
 
     const vizabi = new Vizabi(main);
 

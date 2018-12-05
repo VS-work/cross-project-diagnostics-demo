@@ -1,29 +1,30 @@
 import * as express from 'express';
 import { DdfCsvReader } from './ddfcsv-reader';
-import { DiagnosticManager, LiftingDiagnosticManager, EndpointDiagnosticManager } from './diagnostics/diagnostic-manager';
+import { DiagnosticManager, createDiagnosticManagerOn, EndpointDiagnosticManager } from './diagnostics/diagnostic-manager';
 
 class WaffleServer {
-  private diag: LiftingDiagnosticManager;
+  private diag: DiagnosticManager;
 
   constructor(parentDiagnostic: DiagnosticManager) {
-    this.diag = new LiftingDiagnosticManager('waffleserver', parentDiagnostic.requestId, '1.0.0');
-    this.diag.addOutputTo(parentDiagnostic);
+    this.diag = createDiagnosticManagerOn('waffleserver', '1.0.0').basedOn(parentDiagnostic);
   }
 
   async processQuery(query) {
+    const { debug, error } = this.diag.prepareDiagnosticFor('processQuery');
+
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        this.diag.debug('processQuery', 'start query processing');
+        debug('start query processing');
 
         try {
           const ddfCsvReader = new DdfCsvReader(this.diag);
           const data = ddfCsvReader.read(query);
 
-          this.diag.debug('processQuery', 'got result');
+          debug('got result');
 
           resolve(data);
         } catch (e) {
-          this.diag.error('processQuery', e.message);
+          error(e.message);
 
           reject({ error: e.message });
         }
@@ -36,16 +37,17 @@ const app = express();
 const port = 3000;
 
 app.get('/', async (req, res) => {
-  const diag: DiagnosticManager = new EndpointDiagnosticManager('waffle server', req.query.requestId, '3.0.0');
+  const diag: DiagnosticManager = createDiagnosticManagerOn('waffleserver routes', '3.0.0').forRequest(req.query.requestId);
+  const { debug } = diag.prepareDiagnosticFor('get /');
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'text/plain');
 
-  diag.debug('get /', 'start');
+  debug('start');
 
   const waffleServer = new WaffleServer(diag);
 
-  diag.debug('get /', 'ws instance created');
+  debug('ws instance created');
 
   const query: any = { select: { all: true } };
 
@@ -58,13 +60,11 @@ app.get('/', async (req, res) => {
   try {
     const result: any = await waffleServer.processQuery(query);
 
-    // if (req.diag) {
     result._diagnostic = (<EndpointDiagnosticManager>diag).content;
-    // }
 
     const jsonResult = JSON.stringify(result, null, 2);
 
-    diag.debug('get /', 'got result');
+    debug('got result');
 
     res.write(jsonResult);
   } catch (e) {

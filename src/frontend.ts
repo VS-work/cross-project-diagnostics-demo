@@ -1,4 +1,4 @@
-import { EndpointDiagnosticManager } from './diagnostics/diagnostic-manager';
+import { createDiagnosticManagerOn } from './diagnostics/diagnostic-manager';
 import { Level, getLabelByLevel } from './diagnostics/definitions';
 
 export { getLabelByLevel };
@@ -9,7 +9,7 @@ export class Vizabi {
   chart(delay: number, level: Level,
     emulateFatal: boolean, emulateError: boolean, emulateWarning: boolean, cb: Function): string {
     const requestId = `Q${++this.queryCount}`;
-    const diag = new EndpointDiagnosticManager('vizabi', requestId, '3.0.0');
+    const diag = createDiagnosticManagerOn('vizabi', '3.0.0').forRequest(requestId);
 
     diag.debug('chart', 'prepare new chart', { emulateFatal, emulateError, emulateWarning, delay });
 

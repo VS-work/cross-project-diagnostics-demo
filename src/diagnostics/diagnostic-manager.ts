@@ -1,32 +1,54 @@
 import { DiagnosticRecord, Level } from './definitions';
 
+export interface DiagnosticDescriptor {
+  module: string
+  version: string;
+  requestId?: string,
+}
+
+export function createDiagnosticManagerOn(module: string, version: string) {
+  return {
+    forRequest: (requestId: string) => {
+      const diagnosticDescriptor = { module, version, requestId };
+
+      return new EndpointDiagnosticManager(diagnosticDescriptor);
+    },
+    basedOn: (parent: DiagnosticManager) => {
+      const diagnosticDescriptor = { module, version, requestId: parent.diagnosticDescriptor.requestId };
+      const diag = new LiftingDiagnosticManager(diagnosticDescriptor);
+
+      diag.addOutputTo(parent);
+
+      return diag;
+    }
+  };
+}
+
 export interface DiagnosticManager {
-  readonly requestId: string,
-  readonly version: string;
+  diagnosticDescriptor: DiagnosticDescriptor;
   fatal(funName: string, message: string, attachment?);
   error(funName: string, message: string, attachment?);
   warning(funName: string, message: string, attachment?);
   debug(funName: string, message: string, attachment?);
+  prepareDiagnosticFor(funName: string);
   addRecord(record: DiagnosticRecord);
 }
 
 export class LiftingDiagnosticManager implements DiagnosticManager {
-  private children: DiagnosticManager[] = [];
+  private parents: DiagnosticManager[] = [];
 
-  constructor(public readonly module: string,
-    public readonly requestId: string,
-    public readonly version: string) {
+  constructor(public readonly diagnosticDescriptor: DiagnosticDescriptor) {
   }
 
-  addOutputTo(child: DiagnosticManager) {
-    this.children.push(child);
+  addOutputTo(parent: DiagnosticManager) {
+    this.parents.push(parent);
   }
 
-  fatal(funName: string, message: string, attachment?) {
+  fatal(funName: string, message: string, attachment) {
     this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.FATAL));
   }
 
-  error(funName: string, message: string, attachment?) {
+  error(funName: string, message: string, attachment) {
     this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.ERROR));
   }
 
@@ -38,17 +60,56 @@ export class LiftingDiagnosticManager implements DiagnosticManager {
     this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.DEBUG));
   }
 
+  prepareDiagnosticFor(funName: string) {
+    return {
+      fatal: this.prepareFatalFor(funName),
+      error: this.prepareErrorFor(funName),
+      warning: this.prepareWarningFor(funName),
+      debug: this.prepareDebugFor(funName)
+    };
+  }
+
   addRecord(record: DiagnosticRecord) {
-    for (const child of this.children) {
-      child.addRecord(record);
+    if (this.parents.length <= 0) {
+      throw Error(`parents are missing for ${this.diagnosticDescriptor.module}@${this.diagnosticDescriptor.version} on ${this.diagnosticDescriptor.requestId}`);
+    }
+
+    for (const parent of this.parents) {
+      parent.addRecord(record);
     }
   }
 
+  private prepareFatalFor(funName: string) {
+    return (message: string, attachment) => {
+      this.fatal(funName, message, attachment);
+    };
+  }
+
+  private prepareErrorFor(funName: string) {
+    return (message: string, attachment) => {
+      this.error(funName, message, attachment);
+    };
+  }
+
+  private prepareWarningFor(funName: string) {
+    return (message: string, attachment?) => {
+      this.warning(funName, message, attachment);
+    };
+  }
+
+  private prepareDebugFor(funName: string) {
+    return (message: string, attachment?) => {
+      this.debug(funName, message, attachment);
+    };
+  }
+
   private prepareRecord(data, level: Level): DiagnosticRecord {
-    const {funName, message, attachment} = data;
+    const { funName, message, attachment } = data;
 
     return {
-      module: this.module, version: this.version, requestId: this.requestId,
+      module: this.diagnosticDescriptor.module,
+      version: this.diagnosticDescriptor.version,
+      requestId: this.diagnosticDescriptor.requestId,
       funName, message, level, attachment
     };
   }
