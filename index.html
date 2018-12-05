@@ -6,6 +6,8 @@
 
 <body>
   <script>
+    let rowsCount = 0;
+
     const vizabi = new frontend.Vizabi();
 
     function showHide(id) {
@@ -16,15 +18,25 @@
     }
 
     function setDiagTable(diagContent) {
+      const getColorByMessage = message => {
+        switch (message) {
+          case 'debug': return '#00aaaa';
+          case 'warning': return '#0000ff';
+          case 'error': return '#ff00ff';
+          case 'fatal': return '#ff0000';
+          default: '#000000'
+        }
+      };
       const resultTable = document.getElementById('result');
-
-      let i = 0;
 
       for (const r of diagContent) {
         const row = resultTable.insertRow();
 
         let cell = row.insertCell();
-        cell.innerHTML = r.module;
+        cell.innerHTML = `${r.module}@${r.version}`;
+
+        cell = row.insertCell();
+        cell.innerHTML = r.funName;
 
         cell = row.insertCell();
         cell.innerHTML = r.requestId;
@@ -33,27 +45,23 @@
         cell.innerHTML = r.message;
 
         cell = row.insertCell();
-        cell.innerHTML = r.version;
-
-        cell = row.insertCell();
         cell.innerHTML = frontend.getLabelByLevel(r.level);
-
-        cell = row.insertCell();
-        cell.innerHTML = r.funName;
+        cell.style.color = getColorByMessage(cell.innerHTML);
 
         cell = row.insertCell();
 
         if (r.attachment) {
-          cell.innerHTML = `<a id="aa${i}" href="#" onclick="showHide(${i})">show</a><span id="a${i}" style="display: none;">${JSON.stringify(r.attachment, null, 2)}</span>`;
+          cell.innerHTML = `<a id="aa${rowsCount}" href="#" onclick="showHide(${rowsCount})">show</a><span id="a${rowsCount}" style="display: none;">${JSON.stringify(r.attachment, null, 2)}</span>`;
         } else {
           cell.innerHTML = '&nbsp;';
         }
-        i++;
+        rowsCount++;
       }
     }
 
     function newChart() {
-      const emulateFatal = document.getElementById('chkFatal').checked;
+      const emulateFrontendFatal = document.getElementById('chkFrontendFatal').checked;
+      const emulateBackendFatal = document.getElementById('chkBackendFatal').checked;
       const emulateError = document.getElementById('chkError').checked;
       const emulateWarning = document.getElementById('chkWarning').checked;
       const delay = Number(document.getElementById('delay').value || 0) * 1000;
@@ -61,7 +69,7 @@
       const elProgress = document.getElementById('progress');
       const elResult = document.getElementById('result');
 
-      const requestId = vizabi.chart(delay, level, emulateFatal, emulateError, emulateWarning, (diagContent) => {
+      const requestId = vizabi.chart(delay, level, emulateFrontendFatal, emulateBackendFatal, emulateError, emulateWarning, (diagContent) => {
         elProgress.innerHTML += `${requestId} is done...<br>`;
         setDiagTable(diagContent);
       });
@@ -79,7 +87,8 @@
       <option value="DEBUG">DEBUG</option>
       <option value="ALL" selected>ALL</option>
     </select>
-    <input type="checkbox" id="chkFatal" /><label for="chkFatal">Emulate FATAL</label>&nbsp;
+    <input type="checkbox" id="chkFrontendFatal" /><label for="chkFrontendFatal">Emulate Frontend FATAL</label>&nbsp;
+    <input type="checkbox" id="chkBackendFatal" /><label for="chkBackendFatal">Emulate Backend FATAL</label>&nbsp;
     <input type="checkbox" id="chkError" /><label for="chkError">Emulate ERROR</label>&nbsp;
     <input type="checkbox" id="chkWarning" /><label for="chkWarning">Emulate WARNING</label>&nbsp;
     <input type="button" value="new chart" onclick="newChart()" />
@@ -95,17 +104,16 @@
       <td valign="top">
         <table border="1" id="result">
           <thead>
-            <th>Module</th>
-            <th>Request ID</th>
-            <th>Message</th>
-            <th>Version</th>
-            <th>Severity Level</th>
-            <th>Function</th>
-            <th>Attachment</th>
-          </thead>
-        </table>
-      </td>
-    </tr>
+      <th>Module</th>
+      <th>Function</th>
+      <th>Request ID</th>
+      <th>Message</th>
+      <th>Severity Level</th>
+      <th>Attachment</th>
+      </thead>
+  </table>
+  </td>
+  </tr>
   </table>
 
 </body>

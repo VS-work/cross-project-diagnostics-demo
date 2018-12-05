@@ -6,15 +6,17 @@ export { getLabelByLevel };
 export class Vizabi {
   private queryCount: number = 0;
 
-  chart(delay: number, level: Level,
-    emulateFatal: boolean, emulateError: boolean, emulateWarning: boolean, cb: Function): string {
+  chart(delay: number, level: Level, emulateFrontendFatal: boolean, emulateBackendFatal: boolean,
+    emulateError: boolean, emulateWarning: boolean, cb: Function): string {
     const requestId = `Q${++this.queryCount}`;
     const diag = createDiagnosticManagerOn('vizabi', '3.0.0').forRequest(requestId);
+    const { debug, fatal } = diag.prepareDiagnosticFor('chart');
 
-    diag.debug('chart', 'prepare new chart', { emulateFatal, emulateError, emulateWarning, delay });
+    debug('prepare new chart', { emulateFrontendFatal, emulateBackendFatal, emulateError, emulateWarning, delay });
 
     const xhr = new XMLHttpRequest();
-    const url = `http://127.0.0.1:3000/?level=${level}&requestId=${requestId}&emulateFatal=${emulateFatal}&emulateError=${emulateError}&emulateWarning=${emulateWarning}&delay=${delay}`;
+    const url = emulateFrontendFatal ? 'wrong url' :
+      `http://127.0.0.1:3000/?level=${level}&requestId=${requestId}&emulateFatal=${emulateBackendFatal}&emulateError=${emulateError}&emulateWarning=${emulateWarning}&delay=${delay}`;
 
     xhr.open('GET', url);
     xhr.send();
@@ -26,15 +28,15 @@ export class Vizabi {
 
             if (wsResponse._diagnostic) {
               diag.content.push(...wsResponse._diagnostic);
-              diag.debug('chart', 'got external diagnostic');
+              debug('got external diagnostic');
             }
           } catch (e) {
-            diag.fatal('chart', 'parse ws response', e);
+            fatal(`parse ws response`, e);
           }
 
           cb(diag.content);
         } else {
-          diag.fatal('chart', 'parse ws response', xhr.status);
+          fatal('parse ws response', { url, status: xhr.status });
           cb(diag.content);
         }
       }

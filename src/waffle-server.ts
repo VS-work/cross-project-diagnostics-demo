@@ -38,7 +38,7 @@ const port = 3000;
 
 app.get('/', async (req, res) => {
   const diag: DiagnosticManager = createDiagnosticManagerOn('waffleserver routes', '3.0.0').forRequest(req.query.requestId);
-  const { debug } = diag.prepareDiagnosticFor('get /');
+  const { debug, fatal } = diag.prepareDiagnosticFor('get /');
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'text/plain');
@@ -53,22 +53,25 @@ app.get('/', async (req, res) => {
 
   query.delay = Number(req.query.delay);
   query.level = req.query.level;
-  query.emulateFatal = req.query.emulateFatal;
-  query.emulateError = req.query.emulateError;
-  query.emulateWarning = req.query.emulateWarning;
+  query.emulateError = req.query.emulateError === 'true';
+  query.emulateWarning = req.query.emulateWarning === 'true';
 
   try {
+    if (req.query.emulateFatal === 'true') {
+      throw Error('unexpected WS issue!');
+    }
+
     const result: any = await waffleServer.processQuery(query);
-
-    result._diagnostic = (<EndpointDiagnosticManager>diag).content;
-
-    const jsonResult = JSON.stringify(result, null, 2);
-
     debug('got result');
 
+    result._diagnostic = (<EndpointDiagnosticManager>diag).content;
+    const jsonResult = JSON.stringify(result, null, 2);
     res.write(jsonResult);
   } catch (e) {
-    res.write(e);
+    fatal('trouble with route', e);
+
+    const jsonResult = JSON.stringify({ error: e.toString(), _diagnostic: (<EndpointDiagnosticManager>diag).content }, null, 2);
+    res.write(jsonResult);
   } finally {
     res.end();
   }

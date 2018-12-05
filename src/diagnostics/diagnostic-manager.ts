@@ -44,7 +44,9 @@ export class LiftingDiagnosticManager implements DiagnosticManager {
     this.parents.push(parent);
   }
 
-  fatal(funName: string, message: string, attachment) {
+  fatal(funName: string, message: string, attachmentPar) {
+    const attachment = attachmentPar instanceof Error ? attachmentPar.stack : attachmentPar;
+
     this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.FATAL));
   }
 
