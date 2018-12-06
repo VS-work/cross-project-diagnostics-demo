@@ -16,7 +16,6 @@ export const getLevelAvailability = (currentLevel: Level, expectedLevel: Level):
   return (totalPriority & expectedLevel) !== 0;
 };
 
-
 export interface DiagnosticDescriptor {
   module: string;
   version: string;
@@ -161,5 +160,19 @@ export class EndpointDiagnosticManager extends LiftingDiagnosticManager {
 
   addRecord(record: DiagnosticRecord) {
     this.content.push(record);
+  }
+
+  putDiagnosticContentInto(response) {
+    response._diagnostic = this.content;
+  }
+
+  extractDiagnosticContentFrom(response: string) {
+    const jsonResponse = JSON.parse(response);
+
+    if (jsonResponse._diagnostic) {
+      this.content.push(...jsonResponse._diagnostic);
+    } else {
+      throw Error('"_diagnostic" field is NOT defined');
+    }
   }
 }

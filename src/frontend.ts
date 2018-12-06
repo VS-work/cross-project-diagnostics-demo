@@ -1,5 +1,5 @@
 import { createDiagnosticManagerOn } from './diagnostics/diagnostic-manager';
-import { Level, getLabelByLevel, getLevelByLabel } from './diagnostics/definitions';
+import { getLabelByLevel, getLevelByLabel } from './diagnostics/definitions';
 
 export { getLabelByLevel };
 
@@ -24,12 +24,8 @@ export class Vizabi {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           try {
-            const wsResponse = JSON.parse(xhr.responseText);
-
-            if (wsResponse._diagnostic) {
-              diag.content.push(...wsResponse._diagnostic);
-              debug('got external diagnostic');
-            }
+            diag.extractDiagnosticContentFrom(xhr.responseText);
+            debug('got external diagnostic');
           } catch (e) {
             fatal(`parse ws response`, e);
           }

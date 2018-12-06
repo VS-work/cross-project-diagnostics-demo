@@ -37,7 +37,7 @@ const app = express();
 const port = 3000;
 
 app.get('/', async (req, res) => {
-  const diag: DiagnosticManager = createDiagnosticManagerOn('waffleserver routes', '3.0.0')
+  const diag: EndpointDiagnosticManager = createDiagnosticManagerOn('waffleserver routes', '3.0.0')
     .forRequest(req.query.requestId).withSeverityLevel(Number(req.query.level));
   const { debug, fatal } = diag.prepareDiagnosticFor('get /');
 
@@ -64,14 +64,17 @@ app.get('/', async (req, res) => {
     const result: any = await waffleServer.processQuery(query);
     debug('got result');
 
-    result._diagnostic = (<EndpointDiagnosticManager>diag).content;
-    const jsonResult = JSON.stringify(result, null, 2);
-    res.write(jsonResult);
+    diag.putDiagnosticContentInto(result);
+
+    res.write(JSON.stringify(result, null, 2));
   } catch (e) {
     fatal('trouble with route', e);
 
-    const jsonResult = JSON.stringify({ error: e.toString(), _diagnostic: (<EndpointDiagnosticManager>diag).content }, null, 2);
-    res.write(jsonResult);
+    const result = { error: e.toString() };
+
+    diag.putDiagnosticContentInto(result);
+
+    res.write(JSON.stringify(result, null, 2));
   } finally {
     res.end();
   }
