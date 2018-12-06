@@ -1,7 +1,8 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
-import { DiagnosticManager, LiftingDiagnosticManager, EndpointDiagnosticManager } from '../src/diagnostics/diagnostic-manager';
+import { DiagnosticManager, LiftingDiagnosticManager, EndpointDiagnosticManager, getLevelAvailability } from '../src/diagnostics/diagnostic-manager';
+import { Level } from '../src/diagnostics/definitions';
 
 chai.use(chaiAsPromised);
 
@@ -13,10 +14,10 @@ describe('logging', () => {
     sandbox.restore();
   });
 
-  xit('with 3 diagnistics manager', () => {
-    const ws = new LiftingDiagnosticManager({ module: 'ws', version: '1.0.0', requestId: '#Q001' });
-    const wsreader = new LiftingDiagnosticManager({ module: 'wsreader', version: '2.0.0', requestId: '#Q001' });
-    const vizabi = new EndpointDiagnosticManager({ module: 'vizabi', version: '3.0.0', requestId: '#Q001' });
+  it('with 3 diagnistics manager', () => {
+    const ws = new LiftingDiagnosticManager({ module: 'ws', version: '1.0.0', requestId: '#Q001', level: Level.ALL });
+    const wsreader = new LiftingDiagnosticManager({ module: 'wsreader', version: '2.0.0', requestId: '#Q001', level: Level.ALL });
+    const vizabi = new EndpointDiagnosticManager({ module: 'vizabi', version: '3.0.0', requestId: '#Q001', level: Level.ALL });
 
     wsreader.addOutputTo(vizabi);
     ws.addOutputTo(wsreader);
@@ -26,7 +27,7 @@ describe('logging', () => {
     wsreader.debug('foo2', 'notice 2');
     vizabi.debug('foo3', 'notice 3');
 
-    console.log(vizabi.content);
+    expect(!!vizabi.content).to.be.true;
   });
 
   it('with 3 classes', () => {
@@ -34,7 +35,7 @@ describe('logging', () => {
       private diag: LiftingDiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new LiftingDiagnosticManager({ module: 'ws', version: '1.0.0', requestId: '#Q001' });
+        this.diag = new LiftingDiagnosticManager({ module: 'ws', version: '1.0.0', requestId: '#Q001', level: Level.ALL });
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -49,7 +50,7 @@ describe('logging', () => {
       private diag: LiftingDiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new LiftingDiagnosticManager({ module: 'wsreader', version: '2.0.0', requestId: '#Q001' });
+        this.diag = new LiftingDiagnosticManager({ module: 'wsreader', version: '2.0.0', requestId: '#Q001', level: Level.ALL });
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -66,7 +67,7 @@ describe('logging', () => {
       private diag: LiftingDiagnosticManager;
 
       constructor(parentDiagnostic: DiagnosticManager) {
-        this.diag = new LiftingDiagnosticManager({ module: 'vizabi', version: '3.0.0', requestId: '#Q001' });
+        this.diag = new LiftingDiagnosticManager({ module: 'vizabi', version: '3.0.0', requestId: '#Q001', level: Level.ALL });
         this.diag.addOutputTo(parentDiagnostic);
       }
 
@@ -80,12 +81,30 @@ describe('logging', () => {
     }
 
 
-    const main = new EndpointDiagnosticManager({ module: 'tools-page', version: '0.1.0', requestId: '#Q001' });
+    const main = new EndpointDiagnosticManager({ module: 'tools-page', version: '0.1.0', requestId: '#Q001', level: Level.ALL });
 
     const vizabi = new Vizabi(main);
 
     vizabi.go3();
 
-    console.log(main.content);
+    expect(!!main.content).to.be.true;
+  });
+});
+
+describe('getLevelAvailability', () => {
+  it('off-error', () => {
+    expect(getLevelAvailability(Level.OFF, Level.ERROR)).to.be.false;
+  });
+  it('debug-error', () => {
+    expect(getLevelAvailability(Level.DEBUG, Level.ERROR)).to.be.true;
+  });
+  it('warning-error', () => {
+    expect(getLevelAvailability(Level.WARNING, Level.ERROR)).to.be.true;
+  });
+  it('error-error', () => {
+    expect(getLevelAvailability(Level.ERROR, Level.ERROR)).to.be.true;
+  });
+  it('fatal-error', () => {
+    expect(getLevelAvailability(Level.FATAL, Level.ERROR)).to.be.false;
   });
 });

@@ -1,22 +1,22 @@
 import { createDiagnosticManagerOn } from './diagnostics/diagnostic-manager';
-import { Level, getLabelByLevel } from './diagnostics/definitions';
+import { Level, getLabelByLevel, getLevelByLabel } from './diagnostics/definitions';
 
 export { getLabelByLevel };
 
 export class Vizabi {
   private queryCount: number = 0;
 
-  chart(delay: number, level: Level, emulateFrontendFatal: boolean, emulateBackendFatal: boolean,
+  chart(delay: number, severityLabel: string, emulateFrontendFatal: boolean, emulateBackendFatal: boolean,
     emulateError: boolean, emulateWarning: boolean, cb: Function): string {
     const requestId = `Q${++this.queryCount}`;
-    const diag = createDiagnosticManagerOn('vizabi', '3.0.0').forRequest(requestId);
+    const diag = createDiagnosticManagerOn('vizabi', '3.0.0').forRequest(requestId).withSeverityLevel(getLevelByLabel(severityLabel));
     const { debug, fatal } = diag.prepareDiagnosticFor('chart');
 
     debug('prepare new chart', { emulateFrontendFatal, emulateBackendFatal, emulateError, emulateWarning, delay });
 
     const xhr = new XMLHttpRequest();
     const url = emulateFrontendFatal ? 'wrong url' :
-      `http://127.0.0.1:3000/?level=${level}&requestId=${requestId}&emulateFatal=${emulateBackendFatal}&emulateError=${emulateError}&emulateWarning=${emulateWarning}&delay=${delay}`;
+      `http://127.0.0.1:3000/?level=${diag.diagnosticDescriptor.level}&requestId=${requestId}&emulateFatal=${emulateBackendFatal}&emulateError=${emulateError}&emulateWarning=${emulateWarning}&delay=${delay}`;
 
     xhr.open('GET', url);
     xhr.send();

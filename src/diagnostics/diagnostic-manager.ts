@@ -1,20 +1,48 @@
 import { DiagnosticRecord, Level } from './definitions';
 
+export const getLevelAvailability = (currentLevel: Level, expectedLevel: Level): boolean => {
+  const levelPriorities = [Level.OFF, Level.FATAL, Level.ERROR, Level.WARNING, Level.DEBUG, Level.ALL];
+
+  let totalPriority = Level.OFF;
+
+  for (const level of levelPriorities) {
+    totalPriority |= level;
+
+    if (level === currentLevel) {
+      break;
+    }
+  }
+
+  return (totalPriority & expectedLevel) !== 0;
+};
+
+
 export interface DiagnosticDescriptor {
-  module: string
+  module: string;
   version: string;
-  requestId?: string,
+  level: Level;
+  requestId?: string;
 }
 
 export function createDiagnosticManagerOn(module: string, version: string) {
   return {
     forRequest: (requestId: string) => {
-      const diagnosticDescriptor = { module, version, requestId };
+      const diagnosticDescriptor = { module, version, requestId, level: null };
 
-      return new EndpointDiagnosticManager(diagnosticDescriptor);
+      return {
+        withSeverityLevel: (level: Level) => {
+          diagnosticDescriptor.level = level;
+
+          return new EndpointDiagnosticManager(diagnosticDescriptor);
+        }
+      };
     },
     basedOn: (parent: DiagnosticManager) => {
-      const diagnosticDescriptor = { module, version, requestId: parent.diagnosticDescriptor.requestId };
+      const diagnosticDescriptor = {
+        module, version,
+        requestId: parent.diagnosticDescriptor.requestId,
+        level: parent.diagnosticDescriptor.level
+      };
       const diag = new LiftingDiagnosticManager(diagnosticDescriptor);
 
       diag.addOutputTo(parent);
@@ -38,6 +66,9 @@ export class LiftingDiagnosticManager implements DiagnosticManager {
   private parents: DiagnosticManager[] = [];
 
   constructor(public readonly diagnosticDescriptor: DiagnosticDescriptor) {
+    if (!this.diagnosticDescriptor.level) {
+      this.diagnosticDescriptor.level = Level.ERROR;
+    }
   }
 
   addOutputTo(parent: DiagnosticManager) {
@@ -45,21 +76,29 @@ export class LiftingDiagnosticManager implements DiagnosticManager {
   }
 
   fatal(funName: string, message: string, attachmentPar) {
-    const attachment = attachmentPar instanceof Error ? attachmentPar.stack : attachmentPar;
+    if (getLevelAvailability(this.diagnosticDescriptor.level, Level.FATAL)) {
+      const attachment = attachmentPar instanceof Error ? attachmentPar.stack : attachmentPar;
 
-    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.FATAL));
+      this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.FATAL));
+    }
   }
 
   error(funName: string, message: string, attachment) {
-    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.ERROR));
+    if (getLevelAvailability(this.diagnosticDescriptor.level, Level.ERROR)) {
+      this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.ERROR));
+    }
   }
 
   warning(funName: string, message: string, attachment?) {
-    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.WARNING));
+    if (getLevelAvailability(this.diagnosticDescriptor.level, Level.WARNING)) {
+      this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.WARNING));
+    }
   }
 
   debug(funName: string, message: string, attachment?) {
-    this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.DEBUG));
+    if (getLevelAvailability(this.diagnosticDescriptor.level, Level.DEBUG)) {
+      this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.DEBUG));
+    }
   }
 
   prepareDiagnosticFor(funName: string) {

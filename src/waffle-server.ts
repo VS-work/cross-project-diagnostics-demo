@@ -37,7 +37,8 @@ const app = express();
 const port = 3000;
 
 app.get('/', async (req, res) => {
-  const diag: DiagnosticManager = createDiagnosticManagerOn('waffleserver routes', '3.0.0').forRequest(req.query.requestId);
+  const diag: DiagnosticManager = createDiagnosticManagerOn('waffleserver routes', '3.0.0')
+    .forRequest(req.query.requestId).withSeverityLevel(Number(req.query.level));
   const { debug, fatal } = diag.prepareDiagnosticFor('get /');
 
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,7 +53,6 @@ app.get('/', async (req, res) => {
   const query: any = { select: { all: true } };
 
   query.delay = Number(req.query.delay);
-  query.level = req.query.level;
   query.emulateError = req.query.emulateError === 'true';
   query.emulateWarning = req.query.emulateWarning === 'true';
 
