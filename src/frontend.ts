@@ -1,22 +1,19 @@
-import { createDiagnosticManagerOn } from './diagnostics/diagnostic-manager';
-import { getLabelByLevel, getLevelByLabel } from './diagnostics/definitions';
-
-export { getLabelByLevel };
+import { createDiagnosticManagerOn, getLabelByLevel, getLevelByLabel } from 'cross-project-diagnostics';
 
 export class Vizabi {
   private queryCount: number = 0;
 
   chart(delay: number, severityLabel: string, emulateFrontendFatal: boolean, emulateBackendFatal: boolean,
-    emulateError: boolean, emulateWarning: boolean, cb: Function): string {
+        emulateError: boolean, emulateWarning: boolean, cb: Function): string {
     const requestId = `Q${++this.queryCount}`;
     const diag = createDiagnosticManagerOn('vizabi', '3.0.0').forRequest(requestId).withSeverityLevel(getLevelByLabel(severityLabel));
-    const { debug, fatal } = diag.prepareDiagnosticFor('chart');
+    const {debug, fatal} = diag.prepareDiagnosticFor('chart');
 
     diag.setFatalListener(stacktrace => {
       console.error(stacktrace);
     });
 
-    debug('prepare new chart', { emulateFrontendFatal, emulateBackendFatal, emulateError, emulateWarning, delay });
+    debug('prepare new chart', {emulateFrontendFatal, emulateBackendFatal, emulateError, emulateWarning, delay});
 
     const xhr = new XMLHttpRequest();
     const url = emulateFrontendFatal ? 'wrong url' :
@@ -36,12 +33,14 @@ export class Vizabi {
 
           cb(diag.content);
         } else {
-          fatal('parse ws response', { url, status: xhr.status });
+          fatal('parse ws response', {url, status: xhr.status});
           cb(diag.content);
         }
       }
-    }
+    };
 
     return requestId;
   }
 }
+
+export { getLabelByLevel } from 'cross-project-diagnostics';

@@ -1,8 +1,8 @@
 import { DdfQueryValidator } from './ddf-query-validator';
-import { DiagnosticManager, createDiagnosticManagerOn } from './diagnostics/diagnostic-manager';
+import { DiagnosticManager, createDiagnosticManagerOn } from 'cross-project-diagnostics';
 
 export class DdfCsvReader {
-  private diag: DiagnosticManager;
+  private readonly diag: DiagnosticManager;
 
   constructor(parentDiagnostic: DiagnosticManager) {
     this.diag = createDiagnosticManagerOn('ddfcsvreader', '1.0.0').basedOn(parentDiagnostic);

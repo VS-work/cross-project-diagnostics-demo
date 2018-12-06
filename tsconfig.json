@@ -24,7 +24,7 @@
     ]
   },
   "include": [
-    "src/diagnostics/index.ts", "src/waffle-server.ts", "src/frontend.ts"
+    "src/waffle-server.ts", "src/frontend.ts"
   ],
   "exclude": [
     "dist",

@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as express from 'express';
 import { DdfCsvReader } from './ddfcsv-reader';
-import { DiagnosticManager, createDiagnosticManagerOn, EndpointDiagnosticManager } from './diagnostics/diagnostic-manager';
+import { DiagnosticManager, createDiagnosticManagerOn, EndpointDiagnosticManager } from 'cross-project-diagnostics';
 
 class WaffleServer {
-  private diag: DiagnosticManager;
+  private readonly diag: DiagnosticManager;
 
   constructor(parentDiagnostic: DiagnosticManager) {
     this.diag = createDiagnosticManagerOn('waffleserver', '1.0.0').basedOn(parentDiagnostic);

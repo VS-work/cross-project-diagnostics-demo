@@ -1,4 +1,4 @@
-import { DiagnosticManager, createDiagnosticManagerOn } from './diagnostics/diagnostic-manager';
+import { DiagnosticManager, createDiagnosticManagerOn } from 'cross-project-diagnostics';
 
 export class DdfQueryValidator {
   private diag: DiagnosticManager;
