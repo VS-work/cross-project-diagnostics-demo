@@ -12,6 +12,10 @@ export class Vizabi {
     const diag = createDiagnosticManagerOn('vizabi', '3.0.0').forRequest(requestId).withSeverityLevel(getLevelByLabel(severityLabel));
     const { debug, fatal } = diag.prepareDiagnosticFor('chart');
 
+    diag.setFatalListener(stacktrace => {
+      console.error(stacktrace);
+    });
+
     debug('prepare new chart', { emulateFrontendFatal, emulateBackendFatal, emulateError, emulateWarning, delay });
 
     const xhr = new XMLHttpRequest();

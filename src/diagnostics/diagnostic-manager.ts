@@ -46,6 +46,10 @@ export function createDiagnosticManagerOn(module: string, version: string) {
 
       diag.addOutputTo(parent);
 
+      if (parent.getFatalListener()) {
+        diag.setFatalListener(parent.getFatalListener());
+      }
+
       return diag;
     }
   };
@@ -53,6 +57,8 @@ export function createDiagnosticManagerOn(module: string, version: string) {
 
 export interface DiagnosticManager {
   diagnosticDescriptor: DiagnosticDescriptor;
+  getFatalListener(): Function;
+  setFatalListener(onFatal: Function);
   fatal(funName: string, message: string, attachment?);
   error(funName: string, message: string, attachment?);
   warning(funName: string, message: string, attachment?);
@@ -63,6 +69,7 @@ export interface DiagnosticManager {
 
 export class LiftingDiagnosticManager implements DiagnosticManager {
   private parents: DiagnosticManager[] = [];
+  private onFatal: Function;
 
   constructor(public readonly diagnosticDescriptor: DiagnosticDescriptor) {
     if (!this.diagnosticDescriptor.level) {
@@ -74,9 +81,22 @@ export class LiftingDiagnosticManager implements DiagnosticManager {
     this.parents.push(parent);
   }
 
+
+  getFatalListener(): Function {
+    return this.onFatal;
+  }
+
+  setFatalListener(onFatal: Function) {
+    this.onFatal = onFatal;
+  }
+
   fatal(funName: string, message: string, attachmentPar) {
     if (getLevelAvailability(this.diagnosticDescriptor.level, Level.FATAL)) {
       const attachment = attachmentPar instanceof Error ? attachmentPar.stack : attachmentPar;
+
+      if (this.onFatal) {
+        this.onFatal(attachment);
+      }
 
       this.addRecord(this.prepareRecord({ funName, message, attachment }, Level.FATAL));
     }

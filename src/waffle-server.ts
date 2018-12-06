@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as express from 'express';
 import { DdfCsvReader } from './ddfcsv-reader';
 import { DiagnosticManager, createDiagnosticManagerOn, EndpointDiagnosticManager } from './diagnostics/diagnostic-manager';
@@ -40,6 +41,10 @@ app.get('/', async (req, res) => {
   const diag: EndpointDiagnosticManager = createDiagnosticManagerOn('waffleserver routes', '3.0.0')
     .forRequest(req.query.requestId).withSeverityLevel(Number(req.query.level));
   const { debug, fatal } = diag.prepareDiagnosticFor('get /');
+
+  diag.setFatalListener(stacktrace => {
+    fs.appendFile('./backend.log', `${new Date().toISOString()}\n${stacktrace}\n`, () => {});
+  });
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'text/plain');
