@@ -15,7 +15,7 @@
   "dependencies": {
     "cross-project-diagnostics": "0.1.1",
     "express": "4.16.4",
-    "web-request": "^1.0.7"
+    "web-request": "1.0.7"
   },
   "devDependencies": {
     "@types/mocha": "5.2.5",

@@ -42,5 +42,3 @@ export class Vizabi {
     return requestId;
   }
 }
-
-export { getLabelByLevel } from 'cross-project-diagnostics';
