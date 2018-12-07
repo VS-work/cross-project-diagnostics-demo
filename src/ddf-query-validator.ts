@@ -4,7 +4,7 @@ export class DdfQueryValidator {
   private diag: DiagnosticManager;
 
   constructor(parentDiagnostic: DiagnosticManager) {
-    this.diag = createDiagnosticManagerOn('ddfcsvreader', '1.0.0').basedOn(parentDiagnostic);
+    this.diag = createDiagnosticManagerOn('ddf query validator', '1.0.0').basedOn(parentDiagnostic);
   }
 
   validate(query) {
