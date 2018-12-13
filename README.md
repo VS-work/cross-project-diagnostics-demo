@@ -2,7 +2,7 @@
 
 ```
 npm i
-npm npm start
+npm start
 ```
 
 `http://localhost:8080/index.html`
